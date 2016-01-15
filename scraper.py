@@ -84,10 +84,12 @@ def convert_mth_strings ( mth_string ):
 
 #### VARIABLES 1.0
 
-entity_id = "NFTRL4_RWHNFT_gov"
-url = "http://www.royalwolverhamptonhospitals.nhs.uk/about_us/freedom_of_information/how_we_spend_our_money.aspx"
+entity_id = "NFTRLT_GEHNFT_gov"
+urls = "http://www.geh.nhs.uk/about-us/key-documents/spend-over-25k/?p={}"
 errors = 0
 data = []
+url = 'http://www.example.com'
+
 
 #### READ HTML 1.0
 
@@ -96,29 +98,24 @@ soup = BeautifulSoup(html, 'lxml')
 
 
 #### SCRAPE DATA
+import itertools
 
-blocks = soup.find('strong', text=re.compile('Previous Yearly Expenditure')).find_all_next('a')
-for block in blocks:
-    if 'expenditure ' in block.text:
-        previous_links = 'http://www.royalwolverhamptonhospitals.nhs.uk'+block['href']
-        previous_html = urllib2.urlopen(previous_links)
-        previous_soup = BeautifulSoup(previous_html, 'lxml')
-        previous_pages = previous_soup.find('p', text=re.compile('Click on the link')).find_all_next('a')
-        for previous_page in previous_pages:
-            if '.csv' in previous_page['href'] or '.xls' in previous_page['href'] or '.xlsx' in previous_page['href']:
-                title = previous_page.text.strip()
-                url = 'http://www.royalwolverhamptonhospitals.nhs.uk'+previous_page['href']
-                csvMth = title[:3]
-                csvYr = title[-4:]
-                csvMth = convert_mth_strings(csvMth.upper())
-                data.append([csvYr, csvMth, url])
-pages = soup.find('p', text=re.compile('Click on the link')).find_all_next('a')
-for page in pages:
-    if '.csv' in page['href'] or '.xls' in page['href'] or '.xlsx' in page['href']:
-        title = page.text.strip()
-        url = 'http://www.royalwolverhamptonhospitals.nhs.uk'+page['href']
+for i in itertools.count():
+    html = urllib2.urlopen(urls.format(i+1))
+    soup = BeautifulSoup(html, 'lxml')
+    try:
+        blocks = soup.find('div', id='esctl_108971_pnlAssetDisplayArea').find('table', 'DataGrid oDataGrid').find('tbody').find_all('tr')
+    except:
+        break
+    for block in blocks:
+        title = block.find_all('td')[3].find('a')['title'].split('for')[-1].strip().split('-')[-1].strip().replace('Spend over &#163;25,000', '').strip().replace('Spend over &#163;25k', '').strip().replace('Items over &#163;25k', '').strip().replace('spend over &#163;25,000 in George Eliot Hospital NHS Trust', '').strip()
+        if 'Staff Survey' in title:
+            continue
+        url = 'http://www.geh.nhs.uk'+block.find_all('td')[3].find('a')['href']
         csvMth = title[:3]
         csvYr = title[-4:]
+        if '2103' in csvYr:
+            csvYr = '2013'
         csvMth = convert_mth_strings(csvMth.upper())
         data.append([csvYr, csvMth, url])
 
