@@ -108,7 +108,7 @@ for i in itertools.count():
     except:
         break
     for block in blocks:
-        title = block.find_all('td')[3].find('a')['title'].split('for')[-1].strip().split('-')[-1].strip().replace('Spend over &#163;25,000', '').strip().replace('Spend over &#163;25k', '').strip().replace('Items over &#163;25k', '').strip().replace('spend over &#163;25,000 in George Eliot Hospital NHS Trust', '').strip()
+        title = block.find_all('td')[3].find('a')['title'].split('for')[-1].strip().split('-')[-1].strip().replace('Spend over &#163;25,000', '').strip().replace('Spend over &#163;25k', '').strip().replace('Items over &#163;25k', '').strip().replace('spend over &#163;25,000 in George Eliot Hospital NHS Trust', '').strip().replace('Spend Over &#163;25,000 ', '').strip()
         if 'Staff Survey' in title:
             continue
         url = 'http://www.geh.nhs.uk'+block.find_all('td')[3].find('a')['href']
@@ -116,6 +116,10 @@ for i in itertools.count():
         csvYr = title[-4:]
         if '2103' in csvYr:
             csvYr = '2013'
+        if ',000' in csvYr:
+            csvYr = title.split()[1]
+        if 'y 16' in csvYr:
+            csvYr = '2016'
         csvMth = convert_mth_strings(csvMth.upper())
         data.append([csvYr, csvMth, url])
 
